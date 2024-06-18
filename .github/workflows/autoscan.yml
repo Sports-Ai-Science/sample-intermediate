@@ -1,0 +1,32 @@
+name : Java Apps. Vulnerability Assessment
+
+on:
+    push:
+      branches: [ main ]
+    pull_request:
+      branches: [ main ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest # 前回と同じ
+
+    steps:
+    - uses: actions/checkout@v4 # https://github.com/actions/checkout
+    - name: Set up JDK 11
+      uses: actions/setup-java@v4 # https://github.com/actions/setup-java
+      with:
+        java-version: '21' # The JDK version to make available on the path.
+        java-package: jdk # (jre, jdk, or jdk+fx) - defaults to jdk
+        architecture: x64 # (x64 or x86) - defaults to x64
+        distribution: corretto
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+    - name: Run with Gradle
+      run: ./gradlew bootrun &
+    - name: ZAP Full Scan
+      uses: zaproxy/action-full-scan@v0.10.0
+      with:
+        docker_name: 'ghcr.io/zaproxy/zaproxy:stable'
+        target: 'http://localhost:50080/'
+        cmd_options: '-d'
